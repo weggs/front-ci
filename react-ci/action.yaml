@@ -1,0 +1,50 @@
+name: React CI
+inputs:
+  token:
+    description: 'The GitHub authentication token'
+    default: ${{ github.token }}
+  auth_json:
+    description: 'The auth.json'
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Pull default repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+        token: ${{ inputs.token }}
+
+    - name: Add AUTH JSON
+      shell: bash
+      run: echo '${{ inputs.auth_json }}' > auth.json
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+      env:
+        CI: true
+
+    - name: Build the orval config
+      shell: bash
+      run: npm run orval
+      env:
+        CI: true
+
+    - name: Build the app
+      shell: bash
+      run: npm run build
+      env:
+        CI: true
+
+    - name: Lint check
+      shell: bash
+      run: npm run lint
+      env:
+        CI: true
+
+    - name: TypeScript check
+      shell: bash
+      run: npx tsc --noEmit
+      env:
+        CI: true
